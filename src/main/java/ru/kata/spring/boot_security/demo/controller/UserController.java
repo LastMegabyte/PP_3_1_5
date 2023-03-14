@@ -10,12 +10,11 @@ import ru.kata.spring.boot_security.demo.service.UserService;
 
 import java.util.List;
 @Controller
-@RequestMapping("/user")
 public class UserController {
 
-	@GetMapping("/userPage")
-	public String showUserInfo(@AuthenticationPrincipal User user, Model model) {
-		model.addAttribute("user", user);
-		return "userPage";
+	@GetMapping("/users")
+	public String userPage(@AuthenticationPrincipal User user, Model model) {
+		model.addAttribute("authUser", user);
+		return "users";
 	}
 }
