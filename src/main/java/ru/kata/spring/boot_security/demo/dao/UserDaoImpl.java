@@ -10,48 +10,40 @@ import java.util.List;
 
 @Repository
 public class UserDaoImpl implements UserDao {
-
     @PersistenceContext
     private EntityManager entityManager;
 
-
     @Override
-    public List<User> allUsers() {
-        return entityManager.createQuery("select user from User user", User.class).getResultList();
-    }
-
-    @Override
-    public void addUser(User user) {
+    public void save(User user) {
         entityManager.persist(user);
     }
 
     @Override
-    public void updateUser(User user) {
+    public void update(User user) {
         entityManager.merge(user);
     }
-//    @Override
-//    public void changeUser(long id, User updatedUser) {
-//        User userToUpdate = getUserById(id);
-//        userToUpdate.setUsername(updatedUser.getUsername());
-//        userToUpdate.setPassword(new BCryptPasswordEncoder().encode(updatedUser.getPassword()));
-//        userToUpdate.setEmail(updatedUser.getEmail());
-//        entityManager.merge(userToUpdate);
-//    }
 
     @Override
-    public void deleteUser(long id) {
-        entityManager.remove(getUserById(id));
+    public void deleteById(Long id) {
+        entityManager.remove(findById(id));
     }
 
+
     @Override
-    public User getUserById(long id) {
+    public User findById(Long id) {
         return entityManager.find(User.class, id);
     }
 
     @Override
-    public User getUserByUsername(String username) {
+    public User findByEmail(String email) {
+        return entityManager
+                .createQuery("select distinct u from User u JOIN FETCH u.roles r WHERE u.email = :email", User.class)
+                .setParameter("email", email)
+                .getResultList().stream().findAny().orElse(null);
+    }
 
-        return entityManager.createQuery("select user from User user where user.username =: username", User.class)
-                .setParameter("username", username).getSingleResult();
+    @Override
+    public List<User> findAll() {
+        return entityManager.createQuery("select distinct u from User u join fetch u.roles r", User.class).getResultList();
     }
 }

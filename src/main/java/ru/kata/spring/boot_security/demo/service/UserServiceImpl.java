@@ -1,9 +1,11 @@
 package ru.kata.spring.boot_security.demo.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.kata.spring.boot_security.demo.dao.UserDao;
@@ -12,52 +14,55 @@ import ru.kata.spring.boot_security.demo.model.User;
 import java.util.List;
 
 @Service
-public class UserServiceImpl implements UserService, UserDetailsService {
+@Transactional(readOnly = true)
+public class UserServiceImpl implements UserService {
+    private final PasswordEncoder passwordEncoder;
     private final UserDao userDao;
 
-    public UserServiceImpl(UserDao userDao) {
+    @Autowired
+    public UserServiceImpl(PasswordEncoder passwordEncoder, UserDao userDao) {
+        this.passwordEncoder = passwordEncoder;
         this.userDao = userDao;
     }
 
     @Override
-    public List<User> allUsers() {
-        return userDao.allUsers();
+    public List<User> getAllUsers() {
+        return userDao.findAll();
     }
 
     @Override
     @Transactional
-    public void updateUser(User user) {
-        user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
-        userDao.updateUser(user);
-    }
-
-    @Transactional
-    @Override
-    public void addUser(User user) {
-        user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
-        userDao.addUser(user);
-    }
-
-//    @Transactional
-//    @Override
-//    public void changeUser(long id, User updatesUser) {
-//        userDao.changeUser(id, updatesUser);
-//    }
-
-    @Transactional
-    @Override
-    public void deleteUser(long id) {
-        userDao.deleteUser(id);
+    public boolean saveUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (userDao.findByEmail(user.getEmail()) != null) {
+            return false;
+        }
+        userDao.save(user);
+        return true;
     }
 
     @Override
-    public User getUserById(long id) {
-        return userDao.getUserById(id);
+    public User getUserById(Long id) {
+        return userDao.findById(id);
     }
 
     @Override
     @Transactional
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userDao.getUserByUsername(username);
+    public void deleteUserById(Long id) {
+        userDao.deleteById(id);
+    }
+
+    @Transactional
+    @Override
+    public UserDetails loadUserByUsername(String username) {
+        return userDao.findByEmail(username);
+    }
+
+    @Transactional
+    @Override
+    public void editUser(Long id, User user) {
+        user.setId(id);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userDao.update(user);
     }
 }

@@ -1,5 +1,6 @@
 package ru.kata.spring.boot_security.demo.util;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
@@ -17,29 +18,33 @@ public class Init {
     private final UserService userService;
     private final RoleService roleService;
 
+    @Autowired
     public Init(UserService userService, RoleService roleService) {
         this.userService = userService;
         this.roleService = roleService;
     }
 
     @PostConstruct
-    public void startDataBase() {
-        Role roleAdmin = new Role("ROLE_ADMIN");
-        Role roleUser = new Role("ROLE_USER");
-        Set<Role> adminSet = new HashSet<>();
-        Set<Role> userSet = new HashSet<>();
+    public void createUsersWithRoles() {
 
-        roleService.addRole(roleAdmin);
-        roleService.addRole(roleUser);
+        Role role1 = new Role("ROLE_ADMIN");
+        Role role2 = new Role("ROLE_USER");
 
-        adminSet.add(roleAdmin);
-        adminSet.add(roleUser);
-        userSet.add(roleUser);
 
-        User admin = new User("admin", "adminpass", "admin@mail.ru", adminSet);
-        User user1 = new User("user1", "userpass1", "user1@mail.ru", userSet);
+        roleService.saveRole(role1);
+        roleService.saveRole(role2);
 
-        userService.addUser(admin);
-        userService.addUser(user1);
+        Set<Role> set1 = new HashSet<>();
+        set1.add(role1);
+        set1.add(role2);
+        Set<Role> set2 = new HashSet<>();
+        set2.add(role2);
+
+        User user1 = new User("admin", "admin", 25,  "admin@mail.ru", "adminpass", set1 );
+        User user2 = new User("user1", "user1", 35,  "user1@mail.ru", "userpass1", set2 );
+
+        userService.saveUser(user1);
+        userService.saveUser(user2);
+
     }
 }
