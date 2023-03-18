@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public boolean saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        if (userDao.findByEmail(user.getEmail()) != null) {
+        if (userDao.findByName(user.getFirstName()) != null) {
             return false;
         }
         userDao.save(user);
